@@ -8,8 +8,10 @@
 # Import the http specfic classes, os library for general operating system
 # operations and shutil for copying data between files.
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from datetime import datetime
 import os 
 import shutil
+
 
 class HTTPHandler(BaseHTTPRequestHandler):
 	
@@ -28,6 +30,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
 			self.clients_list.append(address)
 			f = open("Client{}.txt".format(len(self.clients_list)),"wb") # Write (Binary mode).
 			f.write("Client's IP Address: {}\r\n\n\n".format(address).encode("utf-8"))
+			f.write("  Date          Time            DATA\r\n".encode("utf-8"))
 			self.files_list.append(f)
 			return len(self.clients_list)-1
 	
@@ -140,14 +143,17 @@ class HTTPHandler(BaseHTTPRequestHandler):
 	
 	# Receives the POST request from the input (read) buffer by reading the specified
 	# message length in bytes from its header, stores it in the right file by making use
-	# of the clients IP and sends OK response (Code:200) to the client.
+	# of the clients IP and sends Acceopted response (Code:202) to the client.
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
 		post_data = self.rfile.read(content_length)
+		curr_time = datetime.now()
+		curr_time = curr_time.strftime("%d/%m/%Y, %H:%M:%S:%f")[:-3]
 		index = self.register_client()
 		if(len(post_data) == 0):
 			self.send_response(204)
 		else:
+			self.files_list[index].write((curr_time+",        ").encode("utf-8"))
 			self.files_list[index].write(post_data)
 			self.files_list[index].write("\r\n".encode("utf-8"))
 			
